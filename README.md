@@ -1,0 +1,2 @@
+# hermeneutics
+Optimization made simple.
