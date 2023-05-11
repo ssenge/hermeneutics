@@ -1,43 +1,53 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable, Callable
 
-from dsl.core import Aggregator, Expr, V
+from dsl.core import Aggregator, V
 from utils.utils import ident, isum, iprod
 
 
+@dataclass
 class Sum(Aggregator):
-    def __init__(self, *lst, f=ident) -> None:
-        self.lst = lst
-        self.f = f
-        self.expr = self.expandit()   ### substitute by actual expandit -- then lst, f is not required to be stored... wrong, as it is required for the convertrs
-
-    def expandit(self) -> Expr:
-        return isum(V(*self.lst)(self.f))
+    def __post_init__(self):
+        self.expr = lambda: isum(V(*self.lst)(self.f))
 
 
-def Σ(*it: Iterable[int]) -> Callable[[Callable[[int], int]], Sum]:
-    return lambda f=ident: Sum(*it, f=f)
+def rsum(*it: Iterable[float]) -> Callable[[Callable[[float], float]], Sum]:
+    return lambda f=ident: Sum(lst=it, f=f)
 
 
-class sum(Aggregator):
-    def __init__(self, *lst) -> None:
-        self.lst = lst
-        self.f = ident
-        self.expr = self.expandit()
-
-    def expandit(self) -> Expr:
-        return Σ(*self.lst)(ident).expr
+Σ = Sigma = rsum
 
 
-def σ(*it: Iterable[int]) -> sum:
-    return sum(*it)
+def sum(*it: Iterable[float]) -> Sum:
+    return Σ(*it)()
 
 
+σ = sigma = sum
+
+
+@dataclass
 class Dot(Aggregator):
-    def __init__(self, *lsts) -> None:
-        self.lsts = lsts
-        self.expr = self.expandit()
+    def __post_init__(self):
+        self.expr = lambda: Σ(*[zip(*self.lst)])(iprod).expr()
 
-    def expandit(self) -> Expr:
-        return Σ(*[zip(*self.lsts)])(iprod).expr
+
+def dot(*it: Iterable[int]) -> Dot:
+    return Dot(lst=it)
+
+
+o = dot
+
+
+@dataclass
+class Mul(Aggregator):
+    def __post_init__(self):
+        self.expr = lambda: iprod(V(*self.lst)(self.f))
+
+
+def mul(*it: Iterable[float]) -> Mul:
+    return Mul(lst=it)
+
+
+x = mul

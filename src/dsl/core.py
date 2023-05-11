@@ -12,7 +12,7 @@ from typing import ClassVar, TypeAlias, TypeVar, Iterable, Callable
 from tail_recurse import tail_call
 
 from dsl.tree import Tree
-from utils.utils import Deque
+from utils.utils import Deque, ident
 
 
 @dataclass(eq=False)
@@ -317,7 +317,7 @@ class ToEquationTraverser(Traverser):
         return ToEquationTraverser('(' + left.result + op.symb + right.result + ')')
 
     def agg(self, a: Aggregator):
-        return a.expr.traverse(ToEquationTraverser()).result
+        return ToEquationTraverser(a.expr().traverse(ToEquationTraverser()).result)
 
 
 @dataclass
@@ -334,7 +334,7 @@ class ToVarListTraverser(Traverser):
         return ToVarListTraverser(left.result + right.result)
 
     def agg(self, a: Aggregator):
-        return ToVarListTraverser(self.result + a.expr.traverse(ToVarListTraverser()).result)
+        return ToVarListTraverser(self.result + a.expr().traverse(ToVarListTraverser()).result)
 
 
 @dataclass
@@ -351,7 +351,7 @@ class ExpandTraverser(Traverser):
         return ExpandTraverser(op.op(left.result, right.result))
 
     def agg(self, a: Aggregator):
-        return ExpandTraverser(a.expr)
+        return ExpandTraverser(a.expr())
         #return ExpandTraverser((ae := a.expr).op(ae.left.traverse(ExpandTraverser()).result, ae.right.traverse(ExpandTraverser()).result))
 
 
@@ -369,7 +369,7 @@ class CalcTraverser(Traverser):
         return CalcTraverser(op.op(left.result, right.result))
 
     def agg(self, a: Aggregator):
-        return CalcTraverser(a.expr.traverse(CalcTraverser()).result)
+        return CalcTraverser(a.expr().traverse(CalcTraverser()).result)
 
 
 @dataclass
@@ -405,15 +405,14 @@ class Contains(Traverser):
         return op.equals(self.expr) or left or right
 
     def agg(self, a: Aggregator):
-        return a.expr.equals(self.expr)
+        return a.equals(self.expr)
 
 
 @dataclass(eq=False)
 class Aggregator(Terminal, ABC):
-
-    @abstractmethod
-    def expandit(self) -> Expr:
-        return NotImplementedError()
+    lst: Iterable = field(default_factory=list)
+    f: Callable = ident
+    expr: Callable = ident
 
 
 X = TypeVar('X')

@@ -1,4 +1,4 @@
-from dsl.aggregators import Σ, Dot, σ
+from dsl.aggregators import Σ, Dot, σ, dot
 from dsl.core import Var, Const, LT, GT, LE, GE, Eq
 
 x = Var()
@@ -94,12 +94,12 @@ def test_simple_sum_3():
 def test_simple_dot_1():
     x = Var()
     y = Var()
-    expr = Dot([x], [y])
+    expr = dot([x], [y])
     assert expr.expand().equals(x * y)
 
 
 def test_simple_dot_2():
     x = Var()
     y = Var()
-    expr = Dot([x, y], [y, x])
+    expr = dot([x, y], [y, x])
     assert expr.expand().equals(x * y + y * x)
