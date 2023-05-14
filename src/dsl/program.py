@@ -60,7 +60,7 @@ class Program(Copyable, ABC):
         return self.copy(objective=self.objective.expand(), constraints=[Constraint(c.name, c.expr.expand()) for c in self.constraints])
 
     def export(self) -> None:
-        self._backend.export()
+        self._backend.model_as_str()
 
 
 @dataclass

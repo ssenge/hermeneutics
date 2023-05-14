@@ -41,13 +41,13 @@ o = dot
 
 
 @dataclass
-class Mul(Aggregator):
+class Mult(Aggregator):
     def __post_init__(self):
         self.expr = lambda: iprod(V(*self.lst)(self.f))
 
 
-def mul(*it: Iterable[float]) -> Mul:
-    return Mul(lst=it)
+def mult(*it: Iterable[float]) -> Mult:
+    return Mult(lst=it)
 
 
-x = mul
+x = mult

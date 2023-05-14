@@ -351,7 +351,7 @@ class ExpandTraverser(Traverser):
         return ExpandTraverser(op.op(left.result, right.result))
 
     def agg(self, a: Aggregator):
-        return ExpandTraverser(a.expr())
+        return ExpandTraverser(a.expr().traverse(ExpandTraverser()).result)
         #return ExpandTraverser((ae := a.expr).op(ae.left.traverse(ExpandTraverser()).result, ae.right.traverse(ExpandTraverser()).result))
 
 
