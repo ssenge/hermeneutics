@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 from abc import ABC
 from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from functools import reduce
-from typing import Any, Callable
+from typing import TypeVar, Generic
 
 ident = lambda x: x
+identm = lambda self, x: x
 isum = lambda it: reduce(lambda x, y: x + y, it)
 iprod = lambda it: reduce(lambda x, y: x * y, it)
 
@@ -16,24 +19,27 @@ class Copyable(ABC):
         return replace(self, **kwargs)
 
 
-class Deque(deque):
-    def __init__(self, it=[]):
+T = TypeVar('T')
+
+
+class Deque(deque, Generic[T]):
+    def __init__(self, it: Iterable[T] = []):
         super().__init__(it)
 
-    def __add__(self, other):
-        match other:
+    def __add__(self, item: T) -> Deque[T]:
+        match item:
             case Iterable():
-                self.extend(other)
+                self.extend(item)
             case _:
-                self.append(other)
+                self.append(item)
         return self
 
-    def __radd__(self, other):
-        match other:
+    def __radd__(self, item: T) -> Deque[T]:
+        match item:
             case Iterable():
-                self.extendleft(reversed(other))
+                self.extendleft(reversed(item))
             case _:
-                self.appendleft(other)
+                self.appendleft(item)
         return self
 
 
