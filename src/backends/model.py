@@ -37,7 +37,7 @@ class Result:
 BMT = TypeVar('BackendModelType')
 
 @dataclass
-class Backend(ABC):
+class Backend(ABC, Generic[BMT]):
     p: Program
     name: str
 
