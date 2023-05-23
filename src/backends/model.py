@@ -42,7 +42,6 @@ class Backend(ABC, Generic[BMT]):
     name: str
 
     def __post_init__(self) -> None:
-        #self.solver = self._convert()
         self.p_ = self._convert()
 
     def _convert(self) -> BMT:

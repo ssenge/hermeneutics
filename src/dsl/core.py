@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import reduce
 from numbers import Number
-from typing import ClassVar, TypeAlias, TypeVar, Iterable, Callable
+from typing import ClassVar, TypeAlias, TypeVar, Iterable, Callable, Self
 
 from tail_recurse import tail_call
 
@@ -287,19 +287,19 @@ BVar: TypeAlias = BinVar
 @dataclass
 class Traverser(ABC):
     @abstractmethod
-    def const(self, c: Const) -> Traverser:
+    def const(self, c: Const) -> Self:
         return NotImplementedError
 
     @abstractmethod
-    def var(self, v: Var) -> Traverser:
+    def var(self, v: Var) -> Self:
         return NotImplementedError
 
     @abstractmethod
-    def op(self, op: Op, left, right) -> Traverser:
+    def op(self, op: Op, left, right) -> Self:
         return NotImplementedError
 
     @abstractmethod
-    def agg(self, a: Aggregator) -> Traverser:
+    def agg(self, a: Aggregator) -> Self:
         return NotImplementedError
 
 
@@ -307,16 +307,16 @@ class Traverser(ABC):
 class ToEquationTraverser(Traverser):
     result: str = ''
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return ToEquationTraverser(str(c.value))
 
     def var(self, v: Var):
         return ToEquationTraverser(v.name)
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return ToEquationTraverser('(' + left.result + op.symb + right.result + ')')
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return ToEquationTraverser(a.expr().traverse(ToEquationTraverser()).result)
 
 
@@ -324,16 +324,16 @@ class ToEquationTraverser(Traverser):
 class ToVarListTraverser(Traverser):
     result: list[Var] = field(default_factory=list)
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return self
 
-    def var(self, v: Var):
+    def var(self, v: Var) -> Self:
         return ToVarListTraverser(self.result + [v])
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return ToVarListTraverser(left.result + right.result)
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return ToVarListTraverser(self.result + a.expr().traverse(ToVarListTraverser()).result)
 
 
@@ -341,16 +341,16 @@ class ToVarListTraverser(Traverser):
 class ExpandTraverser(Traverser):
     result: Expr | None = None
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return ExpandTraverser(c.value)
 
-    def var(self, v: Var):
+    def var(self, v: Var) -> Self:
         return ExpandTraverser(v)
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return ExpandTraverser(op.op(left.result, right.result))
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return ExpandTraverser(a.expr().traverse(ExpandTraverser()).result)
         #return ExpandTraverser((ae := a.expr).op(ae.left.traverse(ExpandTraverser()).result, ae.right.traverse(ExpandTraverser()).result))
 
@@ -359,16 +359,16 @@ class ExpandTraverser(Traverser):
 class CalcTraverser(Traverser):
     result: float = 0.0
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return CalcTraverser(c.value)
 
-    def var(self, v: Var):
+    def var(self, v: Var) -> Self:
         return self
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return CalcTraverser(op.op(left.result, right.result))
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return CalcTraverser(a.expr().traverse(CalcTraverser()).result)
 
 
@@ -377,16 +377,16 @@ class ExprReplacer(Traverser):
     old: Expr = None
     new: Expr = None
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return self.new if c.equals(self.old) else c
 
-    def var(self, v: Var):
+    def var(self, v: Var) -> Self:
         return self.new if v.equals(self.old) else v
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return right if left is None else left if right is None else self.new if op.equals(self.old) else op.__class__(left=left, right=right)
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return self.new if a.equals(self.old) else a
 
 
@@ -395,16 +395,16 @@ class Contains(Traverser):
     expr: Expr = None
     found: bool = False
 
-    def const(self, c: Const):
+    def const(self, c: Const) -> Self:
         return c.equals(self.expr)
 
-    def var(self, v: Var):
+    def var(self, v: Var) -> Self:
         return v.equals(self.expr)
 
-    def op(self, op: Op, left, right):
+    def op(self, op: Op, left, right) -> Self:
         return op.equals(self.expr) or left or right
 
-    def agg(self, a: Aggregator):
+    def agg(self, a: Aggregator) -> Self:
         return a.equals(self.expr)
 
 
